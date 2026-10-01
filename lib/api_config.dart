@@ -1,0 +1,33 @@
+class ApiConfig {
+  static const String baseUrl = "https://api.tiexpo.com/v1";
+  static const int connectTimeoutMs = 30000;
+  static const int receiveTimeoutMs = 30000;
+
+  static const Map<String, String> defaultHeaders = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "App-Version": "1.0.0",
+    "Platform": "android",
+  };
+
+  static Map<String, String> authHeaders(String token) => {
+        ...defaultHeaders,
+        "Authorization": "Bearer $token",
+      };
+
+  static const login = "/auth/login";
+  static const register = "/auth/register";
+  static const profile = "/user/profile";
+  static const events = "/events";
+  static const schedule = "/schedule";
+  static const speakers = "/speakers";
+  static const exhibitors = "/exhibitors";
+  static const sessions = "/sessions";
+  static const tickets = "/tickets";
+  static const notifications = "/notifications";
+  static const floorPlan = "/floor-plan";
+  static const booths = "/booths";
+  static const search = "/search";
+  static const home = "/home";
+  static const banners = "/banners";
+}
