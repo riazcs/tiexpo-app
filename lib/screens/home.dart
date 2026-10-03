@@ -7,6 +7,7 @@ import "../theme.dart";
 import "../widgets/session_card.dart";
 import "badge.dart";
 import "exhibitor_detail.dart";
+import "exhibitor_registration.dart"; // ← added
 import "speaker_detail.dart";
 
 class HomeScreen extends StatefulWidget {
@@ -49,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return CustomScrollView(
       slivers: [
+        // ==================== HEADER ====================
         SliverToBoxAdapter(
           child: Container(
             color: ink,
@@ -112,10 +114,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
+
+        // ==================== BODY ====================
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
           sliver: SliverList.list(
             children: [
+              // Search
               TextField(
                 onChanged: (v) => setState(() => q = v),
                 decoration: InputDecoration(
@@ -129,14 +134,100 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+
+              const SizedBox(height: 20),
+
+              // ========== REGISTER / BOOTH BOOKING CARD ==========
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ExhibitorRegistrationScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        copper,
+                        Color.lerp(copper, const Color(0xFF8B5E3C), 0.35)!,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: copper.withOpacity(0.35),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(
+                          Icons.storefront_outlined,
+                          color: Colors.white,
+                          size: 26,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Booth Booking",
+                              style: GoogleFonts.fraunces(
+                                color: Colors.white,
+                                fontSize: 20,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              "Register as Exhibitor · Reserve your space",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // Search Results or Default Content
               if (n.isNotEmpty) ...[
                 Text("Results", style: GoogleFonts.fraunces(fontSize: 22)),
                 const SizedBox(height: 12),
                 if (hitSessions.isEmpty &&
                     hitSpeakers.isEmpty &&
                     hitExhibitors.isEmpty)
-                  const Text("Nothing matches that search.", style: TextStyle(color: muted)),
+                  const Text(
+                    "Nothing matches that search.",
+                    style: TextStyle(color: muted),
+                  ),
                 ...hitSessions.map((s) => Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: SessionCard(session: s),
@@ -183,7 +274,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(n0.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Text(n0.title,
+                            style: const TextStyle(fontWeight: FontWeight.w600)),
                         const SizedBox(height: 4),
                         Text(n0.body, style: const TextStyle(color: muted)),
                       ],

@@ -1,5 +1,5 @@
 class ApiConfig {
-  static const String baseUrl = "https://api.tiexpo.com/v1";
+  static const String baseUrl = "https://api.textileinnovationexpo.com/v1";
   static const int connectTimeoutMs = 30000;
   static const int receiveTimeoutMs = 30000;
 
@@ -15,8 +15,8 @@ class ApiConfig {
         "Authorization": "Bearer $token",
       };
 
-  static const login = "/auth/login";
-  static const register = "/auth/register";
+  static const login = "/login";
+  static const register = "/register";
   static const profile = "/user/profile";
   static const events = "/events";
   static const schedule = "/schedule";
