@@ -2,11 +2,20 @@ import "package:flutter/material.dart";
 import "package:google_fonts/google_fonts.dart";
 
 const ink = Color(0xFF16130F);
-const paper = Color(0xFFF4EFE6);
-const paper2 = Color(0xFFEBE4D6);
+const paper = Color(0xFFF8FAFC);
+const paper2 = Color(0xFFF3E8FF);
 const copper = Color(0xFFB85C28);
 const pine = Color(0xFF1D4A40);
 const muted = Color(0xFF6E675C);
+const loginBgTop = Color(0xFFF8FAFC);
+const loginBgMiddle = Color(0xFFF3E8FF);
+const loginBgBottom = Color(0xFFECFEFF);
+
+const appBackgroundGradient = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [loginBgTop, loginBgMiddle, loginBgBottom],
+);
 
 ThemeData tiexpoTheme() {
   final text = GoogleFonts.outfitTextTheme(
@@ -22,7 +31,7 @@ ThemeData tiexpoTheme() {
       surface: paper,
       onSurface: ink,
     ),
-    scaffoldBackgroundColor: paper,
+    scaffoldBackgroundColor: loginBgTop,
     textTheme: text,
     appBarTheme: AppBarTheme(
       backgroundColor: paper,
@@ -43,7 +52,7 @@ ThemeData tiexpoTheme() {
 }
 
 Color toneColor(String tone) => switch (tone) {
-      "pine" => pine,
-      "ink" => ink,
-      _ => copper,
-    };
+  "pine" => pine,
+  "ink" => ink,
+  _ => copper,
+};

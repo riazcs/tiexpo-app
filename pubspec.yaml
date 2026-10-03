@@ -13,11 +13,21 @@ dependencies:
   shared_preferences: ^2.3.3
   flutter_secure_storage: ^9.0.0   # For storing auth tokens safely
   provider: ^6.1.1                 # For simple and effective state management
+  http: ^1.4.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+
+  flutter_launcher_icons: ^0.14.4 # Use the latest version
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.jpeg" # Update this to your icon's path
+
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

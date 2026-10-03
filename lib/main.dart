@@ -77,8 +77,15 @@ class _ShellState extends State<Shell> {
               );
             },
             backgroundColor: const Color(0xFF7E22CE),
-            icon: const Icon(Icons.person_add_alt_1, color: Colors.white, size: 18),
-            label: const Text("Register", style: TextStyle(color: Colors.white, fontSize: 13)),
+            icon: const Icon(
+              Icons.person_add_alt_1,
+              color: Colors.white,
+              size: 18,
+            ),
+            label: const Text(
+              "Register",
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
           ),
           const SizedBox(width: 10),
           FloatingActionButton.extended(
@@ -86,47 +93,57 @@ class _ShellState extends State<Shell> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const LoginScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
               );
             },
             backgroundColor: const Color(0xFF0F172A),
-            icon: const Icon(Icons.login_rounded, color: Colors.white, size: 18),
-            label: const Text("Sign In", style: TextStyle(color: Colors.white, fontSize: 13)),
+            icon: const Icon(
+              Icons.login_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
+            label: const Text(
+              "Sign In",
+              style: TextStyle(color: Colors.white, fontSize: 13),
+            ),
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index,
-        onDestinationSelected: (i) => setState(() => index = i),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: "Home",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_today_outlined),
-            selectedIcon: Icon(Icons.calendar_today),
-            label: "Agenda",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.apartment_outlined),
-            selectedIcon: Icon(Icons.apartment),
-            label: "Halls",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.groups_outlined),
-            selectedIcon: Icon(Icons.groups),
-            label: "Voices",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map),
-            label: "Map",
-          ),
-        ],
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(gradient: appBackgroundGradient),
+        child: NavigationBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          selectedIndex: index,
+          onDestinationSelected: (i) => setState(() => index = i),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: "Home",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.calendar_today_outlined),
+              selectedIcon: Icon(Icons.calendar_today),
+              label: "Agenda",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.apartment_outlined),
+              selectedIcon: Icon(Icons.apartment),
+              label: "Halls",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.groups_outlined),
+              selectedIcon: Icon(Icons.groups),
+              label: "Voices",
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.map_outlined),
+              selectedIcon: Icon(Icons.map),
+              label: "Map",
+            ),
+          ],
+        ),
       ),
     );
   }

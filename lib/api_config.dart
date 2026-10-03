@@ -1,5 +1,5 @@
 class ApiConfig {
-  static const String baseUrl = "https://api.textileinnovationexpo.com/v1";
+  static const String baseUrl = "https://api.textileinnovationexpo.com/api/v1";
   static const int connectTimeoutMs = 30000;
   static const int receiveTimeoutMs = 30000;
 
@@ -11,9 +11,9 @@ class ApiConfig {
   };
 
   static Map<String, String> authHeaders(String token) => {
-        ...defaultHeaders,
-        "Authorization": "Bearer $token",
-      };
+    ...defaultHeaders,
+    "Authorization": "Bearer $token",
+  };
 
   static const login = "/login";
   static const register = "/register";
