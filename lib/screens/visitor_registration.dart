@@ -240,11 +240,16 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
                                   const SizedBox(height: 16),
                                   DropdownButtonFormField<String>(
                                     value: _selectedEvent.isEmpty ? null : _selectedEvent,
+                                    isExpanded: true,
                                     decoration: _inputDecoration(hintText: 'Select an expo *', icon: Icons.event),
                                     items: expoOptions.map((expo) {
                                       return DropdownMenuItem<String>(
                                         value: expo,
-                                        child: Text(expo),
+                                        child: Text(
+                                          expo,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       );
                                     }).toList(),
                                     onChanged: (value) => setState(() => _selectedEvent = value ?? ''),

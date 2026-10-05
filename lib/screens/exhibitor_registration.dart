@@ -8,10 +8,12 @@ class ExhibitorRegistrationScreen extends StatefulWidget {
   const ExhibitorRegistrationScreen({super.key});
 
   @override
-  State<ExhibitorRegistrationScreen> createState() => _ExhibitorRegistrationScreenState();
+  State<ExhibitorRegistrationScreen> createState() =>
+      _ExhibitorRegistrationScreenState();
 }
 
-class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScreen> {
+class _ExhibitorRegistrationScreenState
+    extends State<ExhibitorRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _companyNameController = TextEditingController();
   final _contactPersonController = TextEditingController();
@@ -30,9 +32,6 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
   String _boothPackage = '';
   bool _declaredAgreement = false;
   bool _isSubmitting = false;
-
-  final Color brandPurple = const Color(0xFF7E22CE);
-  final Color brandMagenta = const Color(0xFFC026D3);
 
   final List<String> businessSegments = [
     'Textile Machinery',
@@ -75,10 +74,13 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
     super.dispose();
   }
 
-  InputDecoration _inputDecoration({required String hintText, required IconData icon}) {
+  InputDecoration _inputDecoration({
+    required String hintText,
+    required IconData icon,
+  }) {
     return InputDecoration(
       hintText: hintText,
-      prefixIcon: Icon(icon, color: Colors.grey, size: 20),
+      prefixIcon: Icon(icon, color: brandMuted, size: 20),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -99,10 +101,16 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedSegments.isEmpty || _selectedExpos.isEmpty || _boothPackage.isEmpty || !_declaredAgreement) {
+    if (_selectedSegments.isEmpty ||
+        _selectedExpos.isEmpty ||
+        _boothPackage.isEmpty ||
+        !_declaredAgreement) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please complete all required selections and agreement.')),
+          content: Text(
+            'Please complete all required selections and agreement.',
+          ),
+        ),
       );
       return;
     }
@@ -113,8 +121,8 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ Booth Booking Request Logged Successfully!'),
-          backgroundColor: Colors.green,
+          content: Text('Booth booking request logged successfully.'),
+          backgroundColor: brandPurple,
         ),
       );
       _formKey.currentState!.reset();
@@ -137,7 +145,10 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
       });
     } catch (err) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Submission failed: $err'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Submission failed: $err'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -150,13 +161,11 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
       backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Exhibitor Registration'),
-        backgroundColor: const Color(0xFF020617),
-        foregroundColor: Colors.white,
+        backgroundColor: paper,
+        foregroundColor: brandInk,
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: appBackgroundGradient,
-        ),
+        decoration: const BoxDecoration(gradient: appBackgroundGradient),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -171,7 +180,7 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [brandPurple, brandMagenta],
+                          colors: [brandCyan, brandPurple],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -191,7 +200,10 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
                           SizedBox(height: 8),
                           Text(
                             'Exhibitor information & booth selection for the Textile Innovation Expo 2026.',
-                            style: TextStyle(fontSize: 15, color: Colors.white70),
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.white70,
+                            ),
                           ),
                         ],
                       ),
@@ -217,65 +229,109 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
                           children: [
                             const Text(
                               'Company Details',
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 20),
                             TextFormField(
                               controller: _companyNameController,
-                              decoration: _inputDecoration(hintText: 'Company Name *', icon: Icons.business),
-                              validator: (value) => value == null || value.isEmpty ? 'Company Name is required' : null,
+                              decoration: _inputDecoration(
+                                hintText: 'Company Name *',
+                                icon: Icons.business,
+                              ),
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                  ? 'Company Name is required'
+                                  : null,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _contactPersonController,
-                              decoration: _inputDecoration(hintText: 'Contact Person *', icon: Icons.person),
-                              validator: (value) => value == null || value.isEmpty ? 'Contact Person is required' : null,
+                              decoration: _inputDecoration(
+                                hintText: 'Contact Person *',
+                                icon: Icons.person,
+                              ),
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                  ? 'Contact Person is required'
+                                  : null,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _designationController,
-                              decoration: _inputDecoration(hintText: 'Designation *', icon: Icons.work),
-                              validator: (value) => value == null || value.isEmpty ? 'Designation is required' : null,
+                              decoration: _inputDecoration(
+                                hintText: 'Designation *',
+                                icon: Icons.work,
+                              ),
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                  ? 'Designation is required'
+                                  : null,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _phoneController,
                               keyboardType: TextInputType.phone,
-                              decoration: _inputDecoration(hintText: 'Phone Number *', icon: Icons.phone),
-                              validator: (value) => value == null || value.isEmpty ? 'Phone Number is required' : null,
+                              decoration: _inputDecoration(
+                                hintText: 'Phone Number *',
+                                icon: Icons.phone,
+                              ),
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                  ? 'Phone Number is required'
+                                  : null,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
-                              decoration: _inputDecoration(hintText: 'Email Address *', icon: Icons.email),
-                              validator: (value) => value == null || value.isEmpty ? 'Email is required' : null,
+                              decoration: _inputDecoration(
+                                hintText: 'Email Address *',
+                                icon: Icons.email,
+                              ),
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                  ? 'Email is required'
+                                  : null,
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _companyAddressController,
-                              decoration: _inputDecoration(hintText: 'Company Address', icon: Icons.location_on),
+                              decoration: _inputDecoration(
+                                hintText: 'Company Address',
+                                icon: Icons.location_on,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _websiteController,
-                              decoration: _inputDecoration(hintText: 'Website', icon: Icons.link),
+                              decoration: _inputDecoration(
+                                hintText: 'Website',
+                                icon: Icons.link,
+                              ),
                             ),
                             const SizedBox(height: 24),
                             const Text(
                               'Business Segment',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
                               children: businessSegments.map((segment) {
-                                final selected = _selectedSegments.contains(segment);
+                                final selected = _selectedSegments.contains(
+                                  segment,
+                                );
                                 return FilterChip(
                                   label: Text(segment),
                                   selected: selected,
-                                  selectedColor: Colors.purple.shade100,
+                                  selectedColor: paper2,
                                   onSelected: (value) {
                                     setState(() {
                                       if (value) {
@@ -291,7 +347,10 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
                             const SizedBox(height: 24),
                             const Text(
                               'Selected Expo',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Wrap(
@@ -302,7 +361,7 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
                                 return FilterChip(
                                   label: Text(expo),
                                   selected: selected,
-                                  selectedColor: Colors.cyan.shade100,
+                                  selectedColor: brandCyanSoft,
                                   onSelected: (value) {
                                     setState(() {
                                       if (value) {
@@ -318,60 +377,89 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
                             const SizedBox(height: 24),
                             const Text(
                               'Booth Package',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: ['Standard', 'Premium', 'Platinum', 'Custom'].map((pkg) {
-                                final selected = _boothPackage == pkg;
-                                return ChoiceChip(
-                                  label: Text(pkg),
-                                  selected: selected,
-                                  selectedColor: Colors.purple.shade100,
-                                  onSelected: (_) => setState(() => _boothPackage = pkg),
-                                );
-                              }).toList(),
+                              children:
+                                  [
+                                    'Standard',
+                                    'Premium',
+                                    'Platinum',
+                                    'Custom',
+                                  ].map((pkg) {
+                                    final selected = _boothPackage == pkg;
+                                    return ChoiceChip(
+                                      label: Text(pkg),
+                                      selected: selected,
+                                      selectedColor: paper2,
+                                      onSelected: (_) =>
+                                          setState(() => _boothPackage = pkg),
+                                    );
+                                  }).toList(),
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _boothCountController,
                               keyboardType: TextInputType.number,
-                              decoration: _inputDecoration(hintText: 'Booth Count', icon: Icons.format_list_numbered),
+                              decoration: _inputDecoration(
+                                hintText: 'Booth Count',
+                                icon: Icons.format_list_numbered,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _boothNumberPreferenceController,
-                              decoration: _inputDecoration(hintText: 'Preferred Booth Number', icon: Icons.pin_drop),
+                              decoration: _inputDecoration(
+                                hintText: 'Preferred Booth Number',
+                                icon: Icons.pin_drop,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _companyProfileController,
                               maxLines: 4,
-                              decoration: _inputDecoration(hintText: 'Company Profile', icon: Icons.description),
+                              decoration: _inputDecoration(
+                                hintText: 'Company Profile',
+                                icon: Icons.description,
+                              ),
                             ),
                             const SizedBox(height: 24),
                             const Text(
                               'Additional Requirements',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: structuralRequirements.map((requirement) {
-                                final selected = _additionalRequirements.contains(requirement);
+                              children: structuralRequirements.map((
+                                requirement,
+                              ) {
+                                final selected = _additionalRequirements
+                                    .contains(requirement);
                                 return FilterChip(
                                   label: Text(requirement),
                                   selected: selected,
-                                  selectedColor: Colors.green.shade100,
+                                  selectedColor: brandCyanSoft,
                                   onSelected: (value) {
                                     setState(() {
                                       if (value) {
-                                        _additionalRequirements.add(requirement);
+                                        _additionalRequirements.add(
+                                          requirement,
+                                        );
                                       } else {
-                                        _additionalRequirements.remove(requirement);
+                                        _additionalRequirements.remove(
+                                          requirement,
+                                        );
                                       }
                                     });
                                   },
@@ -388,7 +476,9 @@ class _ExhibitorRegistrationScreenState extends State<ExhibitorRegistrationScree
                               activeColor: brandPurple,
                               contentPadding: EdgeInsets.zero,
                               controlAffinity: ListTileControlAffinity.leading,
-                              onChanged: (value) => setState(() => _declaredAgreement = value ?? false),
+                              onChanged: (value) => setState(
+                                () => _declaredAgreement = value ?? false,
+                              ),
                             ),
                             const SizedBox(height: 24),
                             SizedBox(

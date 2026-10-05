@@ -4,6 +4,12 @@ import "package:google_fonts/google_fonts.dart";
 const ink = Color(0xFF16130F);
 const paper = Color(0xFFF8FAFC);
 const paper2 = Color(0xFFF3E8FF);
+const brandPurple = Color(0xFF7E22CE);
+const brandCyan = Color(0xFF06B6D4);
+const brandInk = Color(0xFF1E293B);
+const brandMuted = Color(0xFF64748B);
+const brandBorder = Color(0xFFCBD5E1);
+const brandCyanSoft = Color(0xFFCFFAFE);
 const copper = Color(0xFFB85C28);
 const pine = Color(0xFF1D4A40);
 const muted = Color(0xFF6E675C);
@@ -43,10 +49,28 @@ ThemeData tiexpoTheme() {
         fontWeight: FontWeight.w600,
       ),
     ),
-    navigationBarTheme: const NavigationBarThemeData(
-      backgroundColor: Color(0xFFFFFAF3),
-      indicatorColor: Color(0xFFE8D5C4),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: paper,
+      indicatorColor: paper2,
       height: 72,
+      iconTheme: WidgetStateProperty.resolveWith<IconThemeData?>(
+        (states) => IconThemeData(
+          color: states.contains(WidgetState.selected)
+              ? brandPurple
+              : brandMuted,
+        ),
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>(
+        (states) => TextStyle(
+          color: states.contains(WidgetState.selected)
+              ? brandPurple
+              : brandMuted,
+          fontSize: 12,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w700
+              : FontWeight.w500,
+        ),
+      ),
     ),
   );
 }
