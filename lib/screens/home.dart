@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:google_fonts/google_fonts.dart";
+import "package:tiexpo/theme.dart";
 
 import "../data/expo.dart";
 import "../theme.dart";
@@ -125,9 +126,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Text(
                               "BANGLADESH'S PREMIER TEXTILE EVENT",
                               style: TextStyle(
-                                color: accentMauve.withOpacity(0.95),
+                                color: brandPurple,
                                 fontSize: 10,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.bold,
                                 letterSpacing: 0.9,
                               ),
                             ),

@@ -23,13 +23,21 @@ class ExhibitorDetail extends StatefulWidget {
 }
 
 class _ExhibitorDetailState extends State<ExhibitorDetail> {
+  static const Color accentMauve = Color(0xFFA083B3);
+
   Future<void> _openExternalLink(String value) async {
     final uri = Uri.tryParse(value);
     if (uri == null || !uri.hasScheme) return;
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not open this link.")),
+        SnackBar(
+          content: const Text("Could not open this link."),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       );
     }
   }
@@ -40,6 +48,10 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
       isScrollControlled: true,
       useSafeArea: true,
       showDragHandle: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (_) => _MeetingBookingSheet(companyName: exhibitor.name),
     );
 
@@ -49,6 +61,8 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
         content: Text(
           "Request prepared for ${exhibitor.name}: $booking. Confirm availability with the exhibitor.",
         ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -58,7 +72,13 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
     final exhibitor = widget.exhibitor ?? exhibitorById(widget.id);
     if (exhibitor == null) {
       return Scaffold(
-        appBar: AppBar(),
+        backgroundColor: paper,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          foregroundColor: brandInk,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+        ),
         body: const Center(child: Text("Exhibitor not found.")),
       );
     }
@@ -68,44 +88,72 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
     return Scaffold(
       backgroundColor: paper,
       appBar: AppBar(
-        title: const Text("Company profile"),
-        backgroundColor: paper,
+        title: const Text(
+          "Company profile",
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
+        ),
+        backgroundColor: Colors.white,
         foregroundColor: brandInk,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFE8E4EE)),
+        ),
       ),
       body: Container(
         decoration: const BoxDecoration(gradient: appBackgroundGradient),
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
           children: [
+            // ========== PROFILE HEADER ==========
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: brandBorder),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE8E4EE)),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentMauve.withOpacity(0.06),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    exhibitor.category.toUpperCase(),
-                    style: const TextStyle(
-                      color: brandPurple,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.2,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: brandPurple.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      exhibitor.category.toUpperCase(),
+                      style: const TextStyle(
+                        color: brandPurple,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.0,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
                     exhibitor.name,
                     style: GoogleFonts.fraunces(
                       color: brandInk,
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      height: 1.15,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -123,18 +171,24 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                 ],
               ),
             ),
+
+            // Demo banner
             if (exhibitor.isDemo) ...[
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: paper2,
-                  borderRadius: BorderRadius.circular(6),
+                  color: brandPurple.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: brandPurple.withOpacity(0.15)),
                 ),
                 child: const Row(
                   children: [
                     Icon(Icons.science_outlined, color: brandPurple, size: 18),
-                    SizedBox(width: 8),
+                    SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         "DEMO COMPANY · Sample information, not a live exhibitor.",
@@ -142,6 +196,7 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                           color: brandPurple,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
+                          height: 1.3,
                         ),
                       ),
                     ),
@@ -149,45 +204,80 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                 ),
               ),
             ],
-            const SizedBox(height: 24),
+
+            const SizedBox(height: 22),
+
+            // ========== ABOUT ==========
             const _SectionHeading(title: "About the company"),
-            const SizedBox(height: 8),
-            Text(
-              exhibitor.blurb,
-              style: const TextStyle(
-                color: brandMuted,
-                fontSize: 15,
-                height: 1.5,
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE8E4EE)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    exhibitor.blurb,
+                    style: const TextStyle(
+                      color: brandMuted,
+                      fontSize: 14.5,
+                      height: 1.5,
+                    ),
+                  ),
+                  if (exhibitor.website != null) ...[
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () => _openExternalLink(exhibitor.website!),
+                      style: TextButton.styleFrom(
+                        foregroundColor: brandPurple,
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: const Icon(Icons.open_in_new, size: 16),
+                      label: const Text(
+                        "Visit company website",
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-            if (exhibitor.website != null) ...[
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => _openExternalLink(exhibitor.website!),
-                  icon: const Icon(Icons.open_in_new, size: 16),
-                  label: const Text("Visit company website"),
-                ),
-              ),
-            ],
-            const SizedBox(height: 24),
+
+            const SizedBox(height: 22),
+
+            // ========== BROCHURE ==========
             const _SectionHeading(title: "Company catalogue / brochure"),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: brandBorder),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE8E4EE)),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    exhibitor.brochureUrl == null
-                        ? Icons.menu_book_outlined
-                        : Icons.description_outlined,
-                    color: brandPurple,
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: brandPurple.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      exhibitor.brochureUrl == null
+                          ? Icons.menu_book_outlined
+                          : Icons.description_outlined,
+                      color: brandPurple,
+                      size: 22,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -203,32 +293,42 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                     ),
                   ),
                   if (exhibitor.brochureUrl != null)
-                    TextButton.icon(
+                    TextButton(
                       onPressed: () =>
                           _openExternalLink(exhibitor.brochureUrl!),
-                      icon: const Icon(Icons.open_in_new, size: 16),
-                      label: const Text("Open"),
+                      style: TextButton.styleFrom(
+                        foregroundColor: brandPurple,
+                        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      child: const Text("Open"),
                     ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+
+            const SizedBox(height: 22),
+
+            // ========== VIDEO ==========
             const _SectionHeading(title: "Company video"),
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
               decoration: BoxDecoration(
-                color: brandInk,
-                borderRadius: BorderRadius.circular(8),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E1B2E), Color(0xFF2D2640)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: exhibitor.videoUrl == null
                   ? const Column(
                       children: [
                         Icon(
                           Icons.play_circle_outline_rounded,
-                          color: Colors.white,
-                          size: 48,
+                          color: Colors.white54,
+                          size: 44,
                         ),
                         SizedBox(height: 10),
                         Text(
@@ -244,7 +344,7 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                           "Company video will appear here when available.",
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Color(0xFFCBD5E1),
+                            color: Color(0xFF94A3B8),
                             fontSize: 12,
                           ),
                         ),
@@ -266,12 +366,20 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         TextButton.icon(
                           onPressed: () =>
                               _openExternalLink(exhibitor.videoUrl!),
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.white,
+                            backgroundColor: Colors.white.withOpacity(0.12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                           icon: const Icon(Icons.open_in_new, size: 16),
                           label: const Text("Open video"),
@@ -279,27 +387,54 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                       ],
                     ),
             ),
-            const SizedBox(height: 24),
+
+            const SizedBox(height: 22),
+
+            // ========== PRODUCTS ==========
             const _SectionHeading(title: "Products & solutions"),
             const SizedBox(height: 10),
             if (products.isEmpty)
-              const Text(
-                "Product information has not been published yet.",
-                style: TextStyle(color: brandMuted),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE8E4EE)),
+                ),
+                child: const Text(
+                  "Product information has not been published yet.",
+                  style: TextStyle(color: brandMuted, fontSize: 13.5),
+                ),
               )
             else
               ...products.map(
                 (product) => Container(
                   margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 13,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: brandBorder),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE8E4EE)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.inventory_2_outlined, color: brandCyan),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: brandCyan.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.inventory_2_outlined,
+                          color: brandCyan,
+                          size: 18,
+                        ),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -307,6 +442,7 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                           style: const TextStyle(
                             color: brandInk,
                             fontWeight: FontWeight.w600,
+                            fontSize: 14,
                           ),
                         ),
                       ),
@@ -314,28 +450,52 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                   ),
                 ),
               ),
-            const SizedBox(height: 16),
+
+            const SizedBox(height: 22),
+
+            // ========== NEWS ==========
             const _SectionHeading(title: "News & updates"),
             const SizedBox(height: 10),
             if (exhibitor.news.isEmpty)
-              const Text(
-                "No company updates have been published yet.",
-                style: TextStyle(color: brandMuted),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE8E4EE)),
+                ),
+                child: const Text(
+                  "No company updates have been published yet.",
+                  style: TextStyle(color: brandMuted, fontSize: 13.5),
+                ),
               )
             else
               ...exhibitor.news.map(
                 (news) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
+                  margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: brandBorder),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE8E4EE)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.article_outlined, color: brandPurple),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: brandPurple.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.article_outlined,
+                          color: brandPurple,
+                          size: 18,
+                        ),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -346,6 +506,7 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                               style: const TextStyle(
                                 color: brandInk,
                                 fontWeight: FontWeight.w700,
+                                fontSize: 14.5,
                               ),
                             ),
                             if (news.date.isNotEmpty) ...[
@@ -365,6 +526,7 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                                 style: const TextStyle(
                                   color: brandMuted,
                                   height: 1.4,
+                                  fontSize: 13,
                                 ),
                               ),
                             ],
@@ -375,23 +537,42 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
                   ),
                 ),
               ),
+
+            const SizedBox(height: 12),
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
-          child: FilledButton.icon(
-            onPressed: () => _bookMeeting(exhibitor),
-            icon: const Icon(Icons.event_available_outlined),
-            label: const Text("Book a meeting slot"),
-            style: FilledButton.styleFrom(
-              backgroundColor: brandPurple,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(52),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: const Color(0xFFE8E4EE))),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: FilledButton.icon(
+              onPressed: () => _bookMeeting(exhibitor),
+              icon: const Icon(Icons.event_available_outlined, size: 20),
+              label: const Text(
+                "Book a meeting slot",
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: brandPurple,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(52),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ),
@@ -411,8 +592,8 @@ class _SectionHeading extends StatelessWidget {
       title,
       style: GoogleFonts.fraunces(
         color: brandInk,
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
       ),
     );
   }
@@ -428,8 +609,9 @@ class _ProfileMeta extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: paper2,
-        borderRadius: BorderRadius.circular(4),
+        color: const Color(0xFFF5F3F9),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE8E4EE)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -489,6 +671,33 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
     super.dispose();
   }
 
+  InputDecoration _fieldDecoration({
+    required String label,
+    required String hint,
+    required IconData icon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: Icon(icon, color: const Color(0xFFA083B3), size: 20),
+      filled: true,
+      fillColor: const Color(0xFFF8F7FC),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE8E4EE)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE8E4EE)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: brandPurple, width: 1.5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
@@ -497,7 +706,7 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
       ),
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -506,16 +715,21 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
                 "Meet ${widget.companyName}",
                 style: GoogleFonts.fraunces(
                   color: brandInk,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               const Text(
                 "Choose a preferred 30-minute time. The exhibitor will confirm availability.",
-                style: TextStyle(color: brandMuted),
+                style: TextStyle(
+                  color: brandMuted,
+                  fontSize: 13.5,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 20),
+
               const Text(
                 "EVENT DAY",
                 style: TextStyle(
@@ -533,7 +747,18 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
                       (day) => ChoiceChip(
                         label: Text(day.$2),
                         selected: selectedDay == day.$1,
-                        selectedColor: paper2,
+                        selectedColor: brandPurple.withOpacity(0.12),
+                        checkmarkColor: brandPurple,
+                        labelStyle: TextStyle(
+                          color: selectedDay == day.$1 ? brandPurple : brandInk,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                        side: BorderSide(
+                          color: selectedDay == day.$1
+                              ? brandPurple.withOpacity(0.35)
+                              : const Color(0xFFE8E4EE),
+                        ),
                         onSelected: (_) => setState(() {
                           selectedDay = day.$1;
                           selectedSlot = null;
@@ -542,6 +767,7 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
                     )
                     .toList(),
               ),
+
               const SizedBox(height: 18),
               const Text(
                 "TIME SLOT",
@@ -555,13 +781,24 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
-                runSpacing: 4,
+                runSpacing: 6,
                 children: _daySlots
                     .map(
                       (slot) => ChoiceChip(
                         label: Text(slot),
                         selected: selectedSlot == slot,
-                        selectedColor: paper2,
+                        selectedColor: brandPurple.withOpacity(0.12),
+                        checkmarkColor: brandPurple,
+                        labelStyle: TextStyle(
+                          color: selectedSlot == slot ? brandPurple : brandInk,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12.5,
+                        ),
+                        side: BorderSide(
+                          color: selectedSlot == slot
+                              ? brandPurple.withOpacity(0.35)
+                              : const Color(0xFFE8E4EE),
+                        ),
                         onSelected: (_) => setState(() {
                           selectedSlot = slot;
                           _requestAnotherTime = false;
@@ -570,7 +807,8 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
                     )
                     .toList(),
               ),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 8),
               TextButton.icon(
                 onPressed: () => setState(() {
                   _requestAnotherTime = !_requestAnotherTime;
@@ -578,35 +816,33 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
                 }),
                 icon: const Icon(Icons.edit_calendar_outlined, size: 18),
                 label: const Text("No suitable slot? Request another time"),
+                style: TextButton.styleFrom(foregroundColor: brandPurple),
               ),
+
               if (_requestAnotherTime) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 TextField(
-                  key: const ValueKey("requested-meeting-time"),
                   controller: _requestedTimeController,
                   onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    labelText: "Preferred time",
-                    hintText: "For example, 4:30 PM",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.schedule_outlined),
+                  decoration: _fieldDecoration(
+                    label: "Preferred time",
+                    hint: "For example, 4:30 PM",
+                    icon: Icons.schedule_outlined,
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  key: const ValueKey("meeting-query"),
                   controller: _queryController,
                   onChanged: (_) => setState(() {}),
                   maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: "Meeting query",
-                    hintText: "What would you like to discuss?",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.chat_bubble_outline),
-                    alignLabelWithHint: true,
+                  decoration: _fieldDecoration(
+                    label: "Meeting query",
+                    hint: "What would you like to discuss?",
+                    icon: Icons.chat_bubble_outline,
                   ),
                 ),
               ],
+
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -625,12 +861,21 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
                   style: FilledButton.styleFrom(
                     backgroundColor: brandPurple,
                     foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(50),
+                    disabledBackgroundColor: brandPurple.withOpacity(0.35),
+                    minimumSize: const Size.fromHeight(52),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: Text(
                     _requestAnotherTime
                         ? "Prepare slot request"
                         : "Save preferred time",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),

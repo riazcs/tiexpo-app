@@ -1,14 +1,12 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-
 import 'package:tiexpo/theme.dart';
 
 class VisitorRegistrationScreen extends StatefulWidget {
   const VisitorRegistrationScreen({super.key});
 
   @override
-  State<VisitorRegistrationScreen> createState() => _VisitorRegistrationScreenState();
+  State<VisitorRegistrationScreen> createState() =>
+      _VisitorRegistrationScreenState();
 }
 
 class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
@@ -25,8 +23,9 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
   bool _submitting = false;
   bool _termsAgreed = false;
 
-  final Color brandPurple = const Color(0xFF7E22CE);
-  final Color brandFuchsia = const Color(0xFFC026D3);
+  static const Color brandPurple = Color(0xFF7E22CE);
+  static const Color brandFuchsia = Color(0xFFC026D3);
+  static const Color accentMauve = Color(0xFFA083B3);
 
   final List<String> expoOptions = [
     'Dyeing & Printing Innovation Expo',
@@ -46,24 +45,43 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
     super.dispose();
   }
 
-  InputDecoration _inputDecoration({required String hintText, required IconData icon}) {
+  InputDecoration _inputDecoration({
+    required String label,
+    required String hint,
+    required IconData icon,
+  }) {
     return InputDecoration(
-      hintText: hintText,
-      prefixIcon: Icon(icon, color: Colors.grey, size: 20),
+      labelText: label,
+      hintText: hint,
+      prefixIcon: Icon(icon, color: accentMauve, size: 20),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: const Color(0xFFF8F7FC),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      labelStyle: TextStyle(
+        color: Colors.grey.shade600,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
+      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFE8E4EE)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFE8E4EE)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: brandPurple, width: 2),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: brandPurple, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.red.shade300),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
       ),
     );
   }
@@ -72,8 +90,13 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedEvent.isEmpty || !_termsAgreed) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please choose an event and accept the terms.')),
+        SnackBar(
+          content: const Text('Please choose an event and accept the terms.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       );
       return;
     }
@@ -84,14 +107,25 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
       if (!mounted) return;
       setState(() => _submitted = true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration Successful! 🎉'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Registration Successful! 🎉'),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     } catch (err) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Submission failed: $err'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Submission failed: $err'),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -103,209 +137,125 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text('Visitor Registration'),
-        backgroundColor: const Color(0xFF0F172A),
-        foregroundColor: Colors.white,
+        title: const Text(
+          'Visitor Registration',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 17,
+            color: Color(0xFF1E1B2E), // brandInk
+          ),
+        ),
+        backgroundColor: Colors.white, // was dark slate
+        foregroundColor: const Color(0xFF1E1B2E),
+        elevation: 0,
+        centerTitle: true,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Color(0xFF1E1B2E)),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: const Color(0xFFE8E4EE), // soft border under app bar
+          ),
+        ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: appBackgroundGradient,
-        ),
+        decoration: const BoxDecoration(gradient: appBackgroundGradient),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
             child: Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 900),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ========== HERO HEADER ==========
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.fromLTRB(22, 24, 22, 24),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [brandPurple, brandFuchsia],
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6D2077), Color(0xFFDE1B85)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Register as a Visitor',
-                            style: TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Join Bangladesh’s premier textile innovation exhibition.',
-                            style: TextStyle(fontSize: 15, color: Colors.white70),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 20,
+                            color: brandPurple.withOpacity(0.25),
+                            blurRadius: 24,
                             offset: const Offset(0, 10),
                           ),
                         ],
                       ),
-                      child: _submitted
-                          ? Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.shade50,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.check_circle, color: Colors.green, size: 48),
-                                ),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Registration Successful!',
-                                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  'Your visitor pass will be sent to your email shortly.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 13, color: Colors.grey),
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(backgroundColor: brandPurple),
-                                  onPressed: () => setState(() => _submitted = false),
-                                  child: const Text('Register Another', style: TextStyle(color: Colors.white)),
-                                ),
-                              ],
-                            )
-                          : Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Visitor Registration',
-                                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  const Text(
-                                    'Fill in your details to register',
-                                    style: TextStyle(fontSize: 13, color: Colors.grey),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  TextFormField(
-                                    controller: _nameController,
-                                    decoration: _inputDecoration(hintText: 'Full Name *', icon: Icons.person),
-                                    validator: (value) => value == null || value.isEmpty ? 'Full Name is required' : null,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    decoration: _inputDecoration(hintText: 'Email Address *', icon: Icons.email),
-                                    validator: (value) => value == null || value.isEmpty ? 'Email is required' : null,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _phoneController,
-                                    keyboardType: TextInputType.phone,
-                                    decoration: _inputDecoration(hintText: 'Phone Number', icon: Icons.phone),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _companyController,
-                                    decoration: _inputDecoration(hintText: 'Company Name', icon: Icons.business),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _jobTitleController,
-                                    decoration: _inputDecoration(hintText: 'Job Title / Designation', icon: Icons.work),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  DropdownButtonFormField<String>(
-                                    value: _selectedEvent.isEmpty ? null : _selectedEvent,
-                                    isExpanded: true,
-                                    decoration: _inputDecoration(hintText: 'Select an expo *', icon: Icons.event),
-                                    items: expoOptions.map((expo) {
-                                      return DropdownMenuItem<String>(
-                                        value: expo,
-                                        child: Text(
-                                          expo,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (value) => setState(() => _selectedEvent = value ?? ''),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _notesController,
-                                    maxLines: 3,
-                                    decoration: _inputDecoration(hintText: 'Any special requirements...', icon: Icons.note),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  CheckboxListTile(
-                                    title: const Text(
-                                      'I agree to the Terms & Conditions and confirm accuracy.',
-                                      style: TextStyle(fontSize: 12),
-                                    ),
-                                    value: _termsAgreed,
-                                    activeColor: brandPurple,
-                                    contentPadding: EdgeInsets.zero,
-                                    controlAffinity: ListTileControlAffinity.leading,
-                                    onChanged: (value) => setState(() => _termsAgreed = value ?? false),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 52,
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: brandPurple,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(14),
-                                        ),
-                                      ),
-                                      onPressed: _submitting ? null : _handleSubmit,
-                                      child: _submitting
-                                          ? const SizedBox(
-                                              width: 24,
-                                              height: 24,
-                                              child: CircularProgressIndicator(
-                                                color: Colors.white,
-                                                strokeWidth: 2,
-                                              ),
-                                            )
-                                          : const Text(
-                                              'Register Now',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                ],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.25),
                               ),
                             ),
+                            child: const Text(
+                              'TIEXPO 2026',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text(
+                            'Register as a Visitor',
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              height: 1.15,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Join Bangladesh’s premier textile innovation exhibition and connect with industry leaders.',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              color: Colors.white.withOpacity(0.85),
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ========== FORM CARD ==========
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFEDE9F5)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accentMauve.withOpacity(0.06),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: _submitted ? _buildSuccessState() : _buildForm(),
                     ),
                   ],
                 ),
@@ -313,6 +263,270 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSuccessState() {
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: Colors.green.shade50,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.check_circle_rounded,
+            color: Colors.green.shade600,
+            size: 42,
+          ),
+        ),
+        const SizedBox(height: 18),
+        const Text(
+          'Registration Successful!',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF1E1B2E),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          'Your visitor pass will be sent to your email shortly. Please check your inbox.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13.5,
+            color: Colors.grey.shade600,
+            height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: brandPurple, width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: () => setState(() => _submitted = false),
+            child: const Text(
+              'Register Another Visitor',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: brandPurple,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Your Details',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1E1B2E),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Fill in the information below to complete registration',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+          ),
+          const SizedBox(height: 22),
+
+          // Full Name
+          TextFormField(
+            controller: _nameController,
+            textInputAction: TextInputAction.next,
+            decoration: _inputDecoration(
+              label: 'Full Name *',
+              hint: 'Enter your full name',
+              icon: Icons.person_outline_rounded,
+            ),
+            validator: (v) =>
+                v == null || v.trim().isEmpty ? 'Full name is required' : null,
+          ),
+          const SizedBox(height: 14),
+
+          // Email
+          TextFormField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            decoration: _inputDecoration(
+              label: 'Email Address *',
+              hint: 'you@company.com',
+              icon: Icons.email_outlined,
+            ),
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Email is required';
+              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
+                return 'Enter a valid email';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 14),
+
+          // Phone
+          TextFormField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            textInputAction: TextInputAction.next,
+            decoration: _inputDecoration(
+              label: 'Phone Number',
+              hint: '+880 1XXX-XXXXXX',
+              icon: Icons.phone_outlined,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Company
+          TextFormField(
+            controller: _companyController,
+            textInputAction: TextInputAction.next,
+            decoration: _inputDecoration(
+              label: 'Company Name',
+              hint: 'Your organization',
+              icon: Icons.business_outlined,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Job Title
+          TextFormField(
+            controller: _jobTitleController,
+            textInputAction: TextInputAction.next,
+            decoration: _inputDecoration(
+              label: 'Job Title / Designation',
+              hint: 'e.g. Production Manager',
+              icon: Icons.work_outline_rounded,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Event dropdown
+          DropdownButtonFormField<String>(
+            value: _selectedEvent.isEmpty ? null : _selectedEvent,
+            isExpanded: true,
+            decoration: _inputDecoration(
+              label: 'Select an Expo *',
+              hint: 'Choose event',
+              icon: Icons.event_outlined,
+            ),
+            items: expoOptions
+                .map(
+                  (expo) => DropdownMenuItem(
+                    value: expo,
+                    child: Text(
+                      expo,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) => setState(() => _selectedEvent = v ?? ''),
+            validator: (v) =>
+                v == null || v.isEmpty ? 'Please select an expo' : null,
+          ),
+          const SizedBox(height: 14),
+
+          // Notes
+          TextFormField(
+            controller: _notesController,
+            maxLines: 3,
+            textInputAction: TextInputAction.done,
+            decoration: _inputDecoration(
+              label: 'Special Requirements',
+              hint: 'Any notes or requests (optional)',
+              icon: Icons.notes_rounded,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Terms
+          Theme(
+            data: Theme.of(context).copyWith(
+              checkboxTheme: CheckboxThemeData(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+            child: CheckboxListTile(
+              title: Text(
+                'I agree to the Terms & Conditions and confirm that the information provided is accurate.',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: Colors.grey.shade700,
+                  height: 1.35,
+                ),
+              ),
+              value: _termsAgreed,
+              activeColor: brandPurple,
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              dense: true,
+              onChanged: (v) => setState(() => _termsAgreed = v ?? false),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Submit
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: brandPurple,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shadowColor: brandPurple.withOpacity(0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              onPressed: _submitting ? null : _handleSubmit,
+              child: _submitting
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.2,
+                      ),
+                    )
+                  : const Text(
+                      'Register Now',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }
