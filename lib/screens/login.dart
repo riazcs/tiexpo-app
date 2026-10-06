@@ -7,10 +7,43 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tiexpo/api_config.dart';
 import 'package:tiexpo/screens/dashboard_profile_screen.dart';
-import 'package:tiexpo/screens/exhibitor_registration.dart';
+import 'package:tiexpo/screens/visitor_registration.dart';
+
+Map<String, dynamic>? _userFromResponse(Map<String, dynamic> body) {
+  final data = body['data'];
+  final user = body['user'] ?? (data is Map ? data['user'] : null);
+  return user is Map ? Map<String, dynamic>.from(user) : null;
+}
+
+String? _userIdFromResponse(Map<String, dynamic> body) {
+  final data = body['data'];
+  final user = _userFromResponse(body);
+  final candidates = [
+    body['user_id'],
+    body['userId'],
+    body['id'],
+    if (data is Map) data['user_id'],
+    if (data is Map) data['userId'],
+    if (data is Map) data['id'],
+    user?['id'],
+    user?['user_id'],
+    user?['userId'],
+  ];
+
+  for (final candidate in candidates) {
+    if (candidate is String && candidate.trim().isNotEmpty) {
+      return candidate.trim();
+    }
+    if (candidate is num) return candidate.toString();
+  }
+  return null;
+}
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.onLoginSuccess, this.onSignOut});
+
+  final VoidCallback? onLoginSuccess;
+  final ValueChanged<BuildContext>? onSignOut;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -72,12 +105,29 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
 
+      final responseUser = _userFromResponse(body);
+      final responseData = body['data'];
       final token =
-          (body['token'] ?? body['access_token'] ?? body['data']?['token'])
+          (body['token'] ??
+                  body['access_token'] ??
+                  responseUser?['token'] ??
+                  (responseData is Map ? responseData['token'] : null))
               as String?;
       if (token != null && token.isNotEmpty) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token);
+        if (responseUser != null) {
+          await prefs.setString('auth_user_data', jsonEncode(responseUser));
+        } else {
+          await prefs.remove('auth_user_data');
+        }
+        final userId = _userIdFromResponse(body);
+        if (userId == null) {
+          await prefs.remove('auth_user_id');
+        } else {
+          await prefs.setString('auth_user_id', userId);
+        }
+        widget.onLoginSuccess?.call();
       }
 
       if (!mounted) return;
@@ -92,7 +142,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const DashboardProfileScreen()),
+        MaterialPageRoute(
+          builder: (context) =>
+              DashboardProfileScreen(onSignOut: widget.onSignOut),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
@@ -429,7 +482,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const ExhibitorRegistrationScreen(),
+                                    const VisitorRegistrationScreen(),
                               ),
                             );
                           },

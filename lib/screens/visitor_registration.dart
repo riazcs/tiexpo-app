@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tiexpo/theme.dart';
 
+import '../services/visitor_registration_service.dart';
+
 class VisitorRegistrationScreen extends StatefulWidget {
   const VisitorRegistrationScreen({super.key});
 
@@ -87,6 +89,7 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
   }
 
   Future<void> _handleSubmit() async {
+    if (_submitting) return;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedEvent.isEmpty || !_termsAgreed) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +106,15 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
 
     setState(() => _submitting = true);
     try {
-      await Future.delayed(const Duration(seconds: 1));
+      await VisitorRegistrationService.register(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
+        company: _companyController.text.trim(),
+        jobTitle: _jobTitleController.text.trim(),
+        event: _selectedEvent,
+        notes: _notesController.text.trim(),
+      );
       if (!mounted) return;
       setState(() => _submitted = true);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,6 +128,7 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
         ),
       );
     } catch (err) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Submission failed: $err'),

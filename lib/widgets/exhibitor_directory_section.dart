@@ -160,7 +160,7 @@ class ExhibitorDirectorySectionState extends State<ExhibitorDirectorySection> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: ["All", "Materials", "Technology", "Circularity"].map((
+            children: ["All", "Factories", "Brands", "Suppliers"].map((
               category,
             ) {
               final isSelected = _selectedCategory == category;
@@ -254,16 +254,9 @@ class ExhibitorDirectorySectionState extends State<ExhibitorDirectorySection> {
     final searchable = "${exhibitor.category} ${exhibitor.tags.join(" ")}"
         .toLowerCase();
     final terms = switch (category) {
-      "Materials" => ["fiber", "knit", "silk", "textile", "wearable", "color"],
-      "Technology" => [
-        "machinery",
-        "loom",
-        "software",
-        "cad",
-        "knit",
-        "wearable",
-      ],
-      "Circularity" => [
+      "Factories" => ["fiber", "knit", "silk", "textile", "wearable", "color"],
+      "Brands" => ["machinery", "loom", "software", "cad", "knit", "wearable"],
+      "Suppliers" => [
         "recycl",
         "circular",
         "water",

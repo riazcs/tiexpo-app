@@ -1,8 +1,10 @@
 import "package:flutter/material.dart";
 import "package:google_fonts/google_fonts.dart";
+import "package:shared_preferences/shared_preferences.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../data/expo.dart";
+import "../services/booking_service.dart";
 import "../theme.dart";
 
 class ExhibitorDetail extends StatefulWidget {
@@ -52,15 +54,16 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => _MeetingBookingSheet(companyName: exhibitor.name),
+      builder: (_) => _MeetingBookingSheet(
+        companyName: exhibitor.name,
+        companyId: exhibitor.id,
+      ),
     );
 
     if (booking == null || !mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          "Request prepared for ${exhibitor.name}: $booking. Confirm availability with the exhibitor.",
-        ),
+        content: Text("Booking request sent for ${exhibitor.name}: $booking"),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -633,26 +636,30 @@ class _ProfileMeta extends StatelessWidget {
 }
 
 class _MeetingBookingSheet extends StatefulWidget {
-  const _MeetingBookingSheet({required this.companyName});
+  const _MeetingBookingSheet({
+    required this.companyName,
+    required this.companyId,
+  });
   final String companyName;
+  final String companyId;
 
   @override
   State<_MeetingBookingSheet> createState() => _MeetingBookingSheetState();
 }
 
 class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
-  final _requestedTimeController = TextEditingController();
   final _queryController = TextEditingController();
   int selectedDay = 1;
   String? selectedSlot;
-  bool _requestAnotherTime = false;
+  bool _isSubmitting = false;
+  String? _errorMessage;
 
   List<String> get _daySlots {
     final startMinute = selectedDay == 1 ? 11 * 60 + 30 : 9 * 60;
     const endMinute = 18 * 60;
     return [
-      for (var minute = startMinute; minute <= endMinute; minute += 30)
-        _formatTime(minute),
+      for (var minute = startMinute; minute < endMinute; minute += 30)
+        "${_formatTime(minute)}- ${_formatTime(minute + 30)}",
     ];
   }
 
@@ -661,14 +668,52 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
     final minute = minutes % 60;
     final hour12 = hour % 12 == 0 ? 12 : hour % 12;
     final period = hour < 12 ? "AM" : "PM";
-    return "$hour12:${minute.toString().padLeft(2, "0")} $period";
+    return "$hour12.${minute.toString().padLeft(2, "0")}$period";
   }
 
   @override
   void dispose() {
-    _requestedTimeController.dispose();
     _queryController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submitBooking() async {
+    if (!_canSubmit || _isSubmitting) return;
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("auth_token");
+      final userId = prefs.getString("auth_user_id");
+      if (token == null || token.isEmpty || userId == null || userId.isEmpty) {
+        throw Exception("Please sign in again before booking a meeting.");
+      }
+
+      final dayLabel = ExpoInfo.days
+          .firstWhere((day) => day.$1 == selectedDay)
+          .$2;
+      final timeSlot = "$dayLabel $selectedSlot";
+      await BookingService.create(
+        token: token,
+        userId: userId,
+        companyId: widget.companyId,
+        timeSlot: timeSlot,
+        query: _queryController.text.trim(),
+      );
+
+      if (mounted) Navigator.of(context).pop(timeSlot);
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = error.toString().replaceFirst("Exception: ", "");
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   InputDecoration _fieldDecoration({
@@ -762,6 +807,7 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
                         onSelected: (_) => setState(() {
                           selectedDay = day.$1;
                           selectedSlot = null;
+                          _errorMessage = null;
                         }),
                       ),
                     )
@@ -801,45 +847,29 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
                         ),
                         onSelected: (_) => setState(() {
                           selectedSlot = slot;
-                          _requestAnotherTime = false;
+                          _errorMessage = null;
                         }),
                       ),
                     )
                     .toList(),
               ),
 
-              const SizedBox(height: 8),
-              TextButton.icon(
-                onPressed: () => setState(() {
-                  _requestAnotherTime = !_requestAnotherTime;
-                  if (_requestAnotherTime) selectedSlot = null;
-                }),
-                icon: const Icon(Icons.edit_calendar_outlined, size: 18),
-                label: const Text("No suitable slot? Request another time"),
-                style: TextButton.styleFrom(foregroundColor: brandPurple),
-              ),
-
-              if (_requestAnotherTime) ...[
-                const SizedBox(height: 4),
-                TextField(
-                  controller: _requestedTimeController,
-                  onChanged: (_) => setState(() {}),
-                  decoration: _fieldDecoration(
-                    label: "Preferred time",
-                    hint: "For example, 4:30 PM",
-                    icon: Icons.schedule_outlined,
-                  ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _queryController,
+                onChanged: (_) => setState(() => _errorMessage = null),
+                maxLines: 3,
+                decoration: _fieldDecoration(
+                  label: "Why do you want to meet?",
+                  hint: "What would you like to discuss?",
+                  icon: Icons.chat_bubble_outline,
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _queryController,
-                  onChanged: (_) => setState(() {}),
-                  maxLines: 2,
-                  decoration: _fieldDecoration(
-                    label: "Meeting query",
-                    hint: "What would you like to discuss?",
-                    icon: Icons.chat_bubble_outline,
-                  ),
+              ),
+              if (_errorMessage != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
                 ),
               ],
 
@@ -847,16 +877,8 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: _canSubmit
-                      ? () {
-                          final dayLabel = ExpoInfo.days
-                              .firstWhere((day) => day.$1 == selectedDay)
-                              .$2;
-                          final request = _requestAnotherTime
-                              ? "$dayLabel, ${_requestedTimeController.text.trim()}; query: ${_queryController.text.trim()}"
-                              : "$dayLabel at $selectedSlot";
-                          Navigator.of(context).pop(request);
-                        }
+                  onPressed: _canSubmit && !_isSubmitting
+                      ? _submitBooking
                       : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: brandPurple,
@@ -869,9 +891,7 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
                     ),
                   ),
                   child: Text(
-                    _requestAnotherTime
-                        ? "Prepare slot request"
-                        : "Save preferred time",
+                    _isSubmitting ? "Sending booking..." : "Book meeting",
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
@@ -886,8 +906,6 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
     );
   }
 
-  bool get _canSubmit => _requestAnotherTime
-      ? _requestedTimeController.text.trim().isNotEmpty &&
-            _queryController.text.trim().isNotEmpty
-      : selectedSlot != null;
+  bool get _canSubmit =>
+      selectedSlot != null && _queryController.text.trim().isNotEmpty;
 }

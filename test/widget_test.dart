@@ -7,6 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:tiexpo/data/expo.dart';
 import 'package:tiexpo/main.dart';
@@ -17,7 +18,9 @@ import 'package:tiexpo/screens/visitor_registration.dart';
 
 void main() {
   testWidgets('app shows the primary actions', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const TiexpoApp());
+    await tester.pumpAndSettle();
 
     expect(find.text('Register'), findsOneWidget);
     expect(find.text('Sign In'), findsOneWidget);

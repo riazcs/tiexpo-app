@@ -22,6 +22,7 @@ class ApiConfig {
   static const schedule = "/schedule";
   static const speakers = "/speakers";
   static const exhibitors = "/exhibitors";
+  static const bookings = "/bookings";
   static const sessions = "/sessions";
   static const tickets = "/tickets";
   static const notifications = "/notifications";
