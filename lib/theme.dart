@@ -4,7 +4,7 @@ import "package:google_fonts/google_fonts.dart";
 const ink = Color(0xFF16130F);
 const paper = Color(0xFFF8FAFC);
 const paper2 = Color(0xFFF3E8FF);
-const brandPurple = Color(0xFF7E22CE);
+const brandPurple = Color(0xFF6D1E7B);
 const brandCyan = Color(0xFF06B6D4);
 const brandInk = Color(0xFF1E293B);
 const brandMuted = Color(0xFF64748B);
@@ -13,14 +13,21 @@ const brandCyanSoft = Color(0xFFCFFAFE);
 const copper = Color(0xFFB85C28);
 const pine = Color(0xFF1D4A40);
 const muted = Color(0xFF6E675C);
-const loginBgTop = Color(0xFFF8FAFC);
-const loginBgMiddle = Color(0xFFF3E8FF);
-const loginBgBottom = Color(0xFFECFEFF);
+const loginBgTop = Color(0xFFF9F7FD);
+const loginBgMiddle = Color(0xFFF0E9F8);
+const loginBgBottom = Color(0xFFEAF6FB);
 
 const appBackgroundGradient = LinearGradient(
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
-  colors: [loginBgTop, loginBgMiddle, loginBgBottom],
+  colors: [
+    loginBgTop,
+    Color(0xFFF2EDFA),
+    loginBgMiddle,
+    loginBgBottom,
+    Color(0xFFF7FAFD),
+  ],
+  stops: [0, 0.24, 0.52, 0.8, 1],
 );
 
 ThemeData tiexpoTheme() {

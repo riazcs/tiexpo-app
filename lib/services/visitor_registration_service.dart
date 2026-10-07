@@ -1,11 +1,9 @@
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
-
 import '../api_config.dart';
 
 class VisitorRegistrationService {
-  static Future<void> register({
+  static Future<Map<String, dynamic>> register({
     required String name,
     required String email,
     required String phone,
@@ -13,64 +11,48 @@ class VisitorRegistrationService {
     required String jobTitle,
     required String event,
     required String notes,
-    http.Client? client,
+    // required String recaptchaToken,
   }) async {
-    final apiClient = client ?? http.Client();
-    try {
-      final response = await apiClient
-          .post(
-            Uri.parse('${ApiConfig.baseUrl}${ApiConfig.register}'),
-            headers: ApiConfig.defaultHeaders,
-            body: jsonEncode({
-              'type': 'visitor_registration',
-              'name': name,
-              'email': email,
-              'phone': phone,
-              'company': company,
-              'job_title': jobTitle,
-              'event': event,
-              'notes': notes,
-            }),
-          )
-          .timeout(const Duration(milliseconds: ApiConfig.receiveTimeoutMs));
+    final uri = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.register}');
 
-      final body = _decodeResponse(response.body);
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw Exception(_errorMessage(body, response.statusCode));
-      }
-      if (body['success'] != true) {
-        throw Exception(_errorMessage(body, response.statusCode));
-      }
-    } finally {
-      if (client == null) apiClient.close();
-    }
-  }
+    final body = {
+      'type': 'visitor_registration', // required for correct route
+      'name': name,
+      'email': email,
+      'phone': phone.isEmpty ? null : phone,
+      'event': event,
+      'company': company.isEmpty ? null : company, // NOT company_name
+      'job_title': jobTitle.isEmpty ? null : jobTitle,
+      'notes': notes.isEmpty ? null : notes,
+      // 'recaptcha_token': recaptchaToken,
+    };
 
-  static Map<String, dynamic> _decodeResponse(String responseBody) {
-    final decoded = jsonDecode(responseBody);
-    if (decoded is! Map) {
-      throw const FormatException('Registration response must be an object.');
-    }
-    return Map<String, dynamic>.from(decoded);
-  }
+    final response = await http
+        .post(uri, headers: ApiConfig.defaultHeaders, body: jsonEncode(body))
+        .timeout(const Duration(milliseconds: ApiConfig.receiveTimeoutMs));
 
-  static String _errorMessage(Map<String, dynamic> body, int statusCode) {
-    final errors = body['errors'];
-    if (errors is Map) {
-      final messages = <String>[];
-      for (final entry in errors.entries) {
-        final value = entry.value;
-        if (value is List) {
-          messages.addAll(value.whereType<String>());
-        } else if (value is String) {
-          messages.add(value);
+    final decoded = response.body.isEmpty
+        ? <String, dynamic>{}
+        : jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final message =
+          decoded['message']?.toString() ??
+          decoded['error']?.toString() ??
+          'Registration failed (${response.statusCode})';
+      final errors = decoded['errors'];
+      if (errors is Map && errors.isNotEmpty) {
+        final first = errors.values.first;
+        if (first is List && first.isNotEmpty) {
+          throw Exception(first.first.toString());
         }
       }
-      if (messages.isNotEmpty) return messages.join('\n');
+      throw Exception(message);
     }
 
-    final message = body['message'] ?? body['error'];
-    if (message is String && message.isNotEmpty) return message;
-    return 'Visitor registration failed ($statusCode).';
+    if (decoded['success'] == false) {
+      throw Exception(decoded['message']?.toString() ?? 'Registration failed');
+    }
+
+    return decoded;
   }
 }

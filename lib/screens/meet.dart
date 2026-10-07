@@ -5,16 +5,31 @@ import "../data/expo.dart";
 import "../theme.dart";
 import "../widgets/exhibitor_directory_section.dart";
 
-class MeetScreen extends StatelessWidget {
-  const MeetScreen({super.key});
+class MeetScreen extends StatefulWidget {
+  const MeetScreen({super.key, this.onLoginSuccess});
+  final VoidCallback? onLoginSuccess;
+
+  @override
+  State<MeetScreen> createState() => _MeetScreenState();
+}
+
+class _MeetScreenState extends State<MeetScreen> {
+  final _directoryKey = GlobalKey<ExhibitorDirectorySectionState>();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(gradient: appBackgroundGradient),
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
-        children: [
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification.metrics.extentAfter < 400) {
+            _directoryKey.currentState?.loadNextPage();
+          }
+          return false;
+        },
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 28, 20, 40),
+          children: [
           const Text(
             "MEET & CONNECT",
             style: TextStyle(
@@ -43,8 +58,12 @@ class MeetScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const ExhibitorDirectorySection(),
-        ],
+            ExhibitorDirectorySection(
+              key: _directoryKey,
+              onLoginSuccess: widget.onLoginSuccess,
+            ),
+          ],
+        ),
       ),
     );
   }

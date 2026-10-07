@@ -1,5 +1,5 @@
 class ApiConfig {
-  static const String baseUrl = "https://api.textileinnovationexpo.com/api/v1";
+  static const String baseUrl = "https://api.textileinnovationexpo.com/api";
   static const int connectTimeoutMs = 30000;
   static const int receiveTimeoutMs = 30000;
 
@@ -31,4 +31,30 @@ class ApiConfig {
   static const search = "/search";
   static const home = "/home";
   static const banners = "/banners";
+
+  // Textile Today / featured companies
+  static const String textileTodayBaseUrl = "https://api.textiletoday.org";
+  static const String featuredCompanies =
+      "$textileTodayBaseUrl/api/get-featured-companies";
+  static const String featuredCompanyAssetsBaseUrl = textileTodayBaseUrl;
+
+  /// Company detail by slug, e.g. tech-cell-bd-ltd
+  static String companyDetails(String slug) =>
+      "$textileTodayBaseUrl/api/get-company-details/$slug";
+
+  static const String visitorRecaptchaSiteKey =
+      "6LcOEiojAAAAAMwQuDe2fwdajwKbB4fGgNPM0irS";
+
+  /// Turn relative storage path into full image URL
+  /// Input:  /storage/uploads/company/tech-cell-bd-ltd/tech_cell_bd_ltd_17337175498344.jpg
+  /// Output: https://api.textiletoday.org/storage/uploads/company/...
+  static String? resolveAssetUrl(String? path) {
+    if (path == null || path.trim().isEmpty) return null;
+    final trimmed = path.trim();
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null) return null;
+    if (uri.hasScheme) return uri.toString(); // already absolute
+    final normalized = trimmed.startsWith("/") ? trimmed : "/$trimmed";
+    return "$featuredCompanyAssetsBaseUrl$normalized";
+  }
 }

@@ -99,11 +99,14 @@ class _ShellState extends State<Shell> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      HomeScreen(onOpenAgenda: () => setState(() => index = 2)),
+      HomeScreen(
+        onOpenAgenda: () => setState(() => index = 2),
+        onLoginSuccess: _markSignedIn,
+      ),
       _isSignedIn
           ? DashboardProfileScreen(onSignOut: _signOutFromProfileTab)
-          : const VisitorRegistrationScreen(),
-      const MeetScreen(),
+          : VisitorRegistrationScreen(onLoginRequested: _openSignIn),
+      MeetScreen(onLoginSuccess: _markSignedIn),
       const AboutScreen(),
     ];
 
@@ -117,7 +120,7 @@ class _ShellState extends State<Shell> {
           : FloatingActionButton.extended(
               heroTag: 'login_btn',
               onPressed: _openSignIn,
-              backgroundColor: brandPurple,
+              backgroundColor: const Color(0xFF6D1E7B),
               icon: const Icon(
                 Icons.login_rounded,
                 color: Colors.white,

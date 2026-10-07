@@ -76,9 +76,13 @@ void main() {
     expect(find.text('Demo Loom Works'), findsOneWidget);
   });
 
-  testWidgets('exhibitor profile supports meeting requests', (
+  testWidgets('meeting booking offers the correct slots on all expo days', (
     WidgetTester tester,
   ) async {
+    SharedPreferences.setMockInitialValues({
+      'auth_token': 'test-token',
+      'auth_user_id': '1',
+    });
     const testExhibitor = Exhibitor(
       id: 'test-company',
       name: 'Test Textiles',
@@ -86,7 +90,7 @@ void main() {
       booth: 'A12',
       hall: 'Hall A',
       blurb: 'A test company profile.',
-      tags: ['smart-fibers', 'technical-textiles'],
+      tags: [],
     );
     await tester.pumpWidget(
       MaterialApp(
@@ -95,51 +99,122 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('About the company'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('Company catalogue / brochure'),
-      120,
-    );
-    expect(find.text('Company catalogue / brochure'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Company video'), 180);
-    expect(find.text('Company video'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Products & solutions'), 180);
-    expect(find.text('Products & solutions'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('News & updates'), 180);
-    expect(find.text('News & updates'), findsOneWidget);
-
     await tester.tap(find.text('Book a meeting slot'));
     await tester.pumpAndSettle();
     expect(find.text('Meet Test Textiles'), findsOneWidget);
-    expect(find.text('11:30 AM'), findsOneWidget);
-    expect(find.text('9:00 AM'), findsNothing);
-    expect(find.text('6:00 PM'), findsOneWidget);
+    expect(find.text('Thu 12 Nov'), findsOneWidget);
+    expect(find.text('Fri 13 Nov'), findsOneWidget);
+    expect(find.text('Sat 14 Nov'), findsOneWidget);
+
+    expect(find.text('11.30 AM - 12.00 PM'), findsOneWidget);
+    expect(find.text('5.30 PM - 6.00 PM'), findsOneWidget);
+    expect(find.text('11.00 AM - 11.30 AM'), findsNothing);
 
     await tester.tap(find.text('Fri 13 Nov'));
     await tester.pump();
-    expect(find.text('9:00 AM'), findsOneWidget);
-    expect(find.text('6:00 PM'), findsOneWidget);
-    await tester.tap(find.text('Thu 12 Nov'));
-    await tester.pump();
+    expect(find.text('11.00 AM - 11.30 AM'), findsOneWidget);
+    expect(find.text('5.30 PM - 6.00 PM'), findsOneWidget);
 
-    await tester.tap(find.text('11:30 AM'));
+    await tester.tap(find.text('Sat 14 Nov'));
     await tester.pump();
-    await tester.ensureVisible(find.text('Save preferred time'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Save preferred time'));
-    await tester.pumpAndSettle();
+    expect(find.text('4.30 PM - 5.00 PM'), findsOneWidget);
+    expect(find.text('5.00 PM - 5.30 PM'), findsNothing);
+  });
 
-    expect(
-      find.text(
-        'Request prepared for Test Textiles: Thu 12 Nov at 11:30 AM. Confirm availability with the exhibitor.',
-      ),
-      findsOneWidget,
+  testWidgets('meeting booking asks guests to sign in first', (
+    WidgetTester tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    const testExhibitor = Exhibitor(
+      id: 'test-company',
+      name: 'Test Textiles',
+      category: 'Materials',
+      booth: 'A12',
+      hall: 'Hall A',
+      blurb: 'A test company profile.',
+      tags: [],
     );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ExhibitorDetail.fromExhibitor(exhibitor: testExhibitor),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Book a meeting slot'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('TIExpo 2026'), findsOneWidget);
+    expect(find.text('Sign In to Dashboard'), findsOneWidget);
+    expect(find.text('Meet Test Textiles'), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Book a meeting slot'), findsOneWidget);
+  });
+
+  testWidgets('exhibitor profile shows up to two products, videos, and news', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 3000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    const testExhibitor = Exhibitor(
+      id: 'limited-company',
+      name: 'Limited Textiles',
+      category: 'Materials',
+      booth: 'A12',
+      hall: 'Hall A',
+      blurb: 'Company profile text.',
+      tags: ['fibers'],
+      products: ['Product One', 'Product Two', 'Product Three'],
+      videoUrls: [
+        'https://example.com/video-one',
+        'https://example.com/video-two',
+        'https://example.com/video-three',
+      ],
+      news: [
+        CompanyNews(title: 'News One'),
+        CompanyNews(title: 'News Two'),
+        CompanyNews(title: 'News Three'),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ExhibitorDetail.fromExhibitor(exhibitor: testExhibitor),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Innovation story'), findsOneWidget);
+    expect(find.text('About the company'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Innovation story')).dy,
+      lessThan(tester.getTopLeft(find.text('About the company')).dy),
+    );
+    expect(find.text('Product One'), findsOneWidget);
+    expect(find.text('Product Two'), findsOneWidget);
+    expect(find.text('Product Three'), findsNothing);
+    expect(find.text('Company video 1'), findsOneWidget);
+    expect(find.text('Company video 2'), findsOneWidget);
+    expect(find.text('Company video 3'), findsNothing);
+    await tester.ensureVisible(find.text('News One'));
+    expect(find.text('News One'), findsOneWidget);
+    expect(find.text('News Two'), findsOneWidget);
+    expect(find.text('News Three'), findsNothing);
   });
 
   testWidgets('alternate meeting request requires a time and query', (
     WidgetTester tester,
   ) async {
+    SharedPreferences.setMockInitialValues({
+      'auth_token': 'test-token',
+      'auth_user_id': '1',
+    });
     const testExhibitor = Exhibitor(
       id: 'test-company',
       name: 'Test Textiles',

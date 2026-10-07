@@ -4,7 +4,9 @@ import 'package:tiexpo/theme.dart';
 import '../services/visitor_registration_service.dart';
 
 class VisitorRegistrationScreen extends StatefulWidget {
-  const VisitorRegistrationScreen({super.key});
+  const VisitorRegistrationScreen({super.key, this.onLoginRequested});
+
+  final Future<void> Function()? onLoginRequested;
 
   @override
   State<VisitorRegistrationScreen> createState() =>
@@ -26,7 +28,6 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
   bool _termsAgreed = false;
 
   static const Color brandPurple = Color(0xFF7E22CE);
-  static const Color brandFuchsia = Color(0xFFC026D3);
   static const Color accentMauve = Color(0xFFA083B3);
 
   final List<String> expoOptions = [
@@ -106,6 +107,13 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
 
     setState(() => _submitting = true);
     try {
+      // final recaptchaToken = await showVisitorRecaptchaChallenge(
+      //   context,
+      //   siteKey: ApiConfig.visitorRecaptchaSiteKey,
+      // );
+      // if (!mounted) return;
+      // if (recaptchaToken == null) return;
+
       await VisitorRegistrationService.register(
         name: _nameController.text.trim(),
         email: _emailController.text.trim(),
@@ -114,6 +122,7 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
         jobTitle: _jobTitleController.text.trim(),
         event: _selectedEvent,
         notes: _notesController.text.trim(),
+        // recaptchaToken: recaptchaToken,
       );
       if (!mounted) return;
       setState(() => _submitted = true);
@@ -307,7 +316,7 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
         ),
         const SizedBox(height: 10),
         Text(
-          'Your visitor pass will be sent to your email shortly. Please check your inbox.',
+          'Your login credentials will be sent to your email. Please check your inbox.',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 13.5,
@@ -326,9 +335,9 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            onPressed: () => setState(() => _submitted = false),
+            onPressed: _goToLogin,
             child: const Text(
-              'Register Another Visitor',
+              'Login to Your Account',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -340,6 +349,15 @@ class _VisitorRegistrationScreenState extends State<VisitorRegistrationScreen> {
         const SizedBox(height: 8),
       ],
     );
+  }
+
+  Future<void> _goToLogin() async {
+    final onLoginRequested = widget.onLoginRequested;
+    if (onLoginRequested != null) {
+      await onLoginRequested();
+    } else if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
   }
 
   Widget _buildForm() {

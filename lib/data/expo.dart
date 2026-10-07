@@ -82,17 +82,38 @@ class Exhibitor {
     required this.hall,
     required this.blurb,
     required this.tags,
+    this.slug,
     this.products = const [],
+    this.productDetails = const [],
     this.news = const [],
     this.logoUrl,
+    this.coverUrl,
     this.videoUrl,
+    this.videoUrls = const [],
     this.brochureUrl,
     this.website,
+    this.address,
+    this.establishedYear,
+    this.employeeCount,
+    this.targetMarket,
+    this.mainProducts,
     this.isDemo = false,
   });
 
   factory Exhibitor.fromJson(Map<String, dynamic> json) {
-    final name = _jsonString(json, const [
+    final rawCompany = json["company"];
+    final company = rawCompany is Map
+        ? Map<String, dynamic>.from(rawCompany)
+        : json;
+    final rawDetails = company["company_details"];
+    final details = rawDetails is Map
+        ? Map<String, dynamic>.from(rawDetails)
+        : const <String, dynamic>{};
+    final rawCategory = details["category"];
+    final categoryDetails = rawCategory is Map
+        ? Map<String, dynamic>.from(rawCategory)
+        : const <String, dynamic>{};
+    final name = _jsonString(company, const [
       "name",
       "company_name",
       "companyName",
@@ -104,48 +125,85 @@ class Exhibitor {
       );
     }
 
-    final category = _jsonString(json, const [
+    final category = _jsonString(company, const [
       "category",
       "industry",
       "sector",
-    ]);
-    final tags = _jsonStringList(json["tags"]);
+    ]).ifEmpty(_jsonString(categoryDetails, const ["name"]));
+    final tags = _jsonStringList(company["tags"]);
     final products = _jsonStringList(
-      json["products"] ?? json["solutions"] ?? json["product_lines"],
+      company["products"] ??
+          company["solutions"] ??
+          company["product_lines"] ??
+          details["main_products"],
     );
+    final productDetails = _exhibitorProducts(company["products"]);
+    final rawImage = company["image"];
+    final image = rawImage is Map
+        ? Map<String, dynamic>.from(rawImage)
+        : const <String, dynamic>{};
+    final videos = _jsonStringList(company["videos"]);
     return Exhibitor(
-      id: _jsonString(json, const ["id", "uuid", "slug"]).ifEmpty(name),
+      id: _jsonString(company, const ["id", "uuid", "slug"])
+          .ifEmpty(
+            _jsonString(details, const ["company_id", "id", "slug"]),
+          )
+          .ifEmpty(name),
+      slug: _jsonString(details, const ["slug"])
+          .ifEmpty(_jsonString(company, const ["slug"]))
+          .nullIfEmpty,
       name: name,
       category: category.ifEmpty("Exhibitor"),
-      booth: _jsonString(json, const [
+      booth: _jsonString(company, const [
         "booth",
         "booth_number",
         "boothNo",
       ]).ifEmpty("TBA"),
-      hall: _jsonString(json, const [
+      hall: _jsonString(company, const [
         "hall",
         "hall_name",
         "venue",
       ]).ifEmpty("To be announced"),
-      blurb: _jsonString(json, const [
+      blurb: _jsonString(company, const [
         "about",
         "description",
         "blurb",
         "bio",
         "company_profile",
-      ]).ifEmpty("Company information has not been published yet."),
-      tags: tags,
-      products: products,
-      news: _companyNewsList(
-        json["news"] ?? json["updates"] ?? json["announcements"],
+      ]).ifEmpty(
+        _jsonString(details, const ["about"]).ifEmpty(
+          "Company information has not been published yet.",
+        ),
       ),
-      logoUrl: _jsonString(json, const [
+      tags: tags.isEmpty && category.isNotEmpty ? [category] : tags,
+      products: products,
+      productDetails: productDetails,
+      news: _companyNewsList(
+        company["news"] ?? company["updates"] ?? company["announcements"],
+      ),
+      logoUrl: _jsonString(company, const [
         "logo_url",
         "logoUrl",
         "logo",
-      ]).nullIfEmpty,
-      videoUrl: _jsonString(json, const ["video_url", "videoUrl"]).nullIfEmpty,
-      brochureUrl: _jsonString(json, const [
+      ])
+          .ifEmpty(_jsonString(details, const ["logo_url", "logoUrl"]))
+          .ifEmpty(_jsonString(details, const ["logo"]))
+          .ifEmpty(
+            _jsonString(image, const ["original_image_path", "path", "url"]),
+          )
+          .nullIfEmpty,
+      coverUrl: _jsonString(company, const ["cover_url", "coverUrl", "banner"])
+          .ifEmpty(_jsonString(details, const ["banner"]))
+          .ifEmpty(
+            _jsonString(image, const ["original_image_path", "path", "url"]),
+          )
+          .nullIfEmpty,
+      videoUrl: _jsonString(company, const ["video_url", "videoUrl"])
+          .ifEmpty(_jsonString(details, const ["video_link"]))
+          .ifEmpty(videos.isEmpty ? "" : videos.first)
+          .nullIfEmpty,
+      videoUrls: videos,
+      brochureUrl: _jsonString(company, const [
         "brochure_url",
         "brochureUrl",
         "catalogue_url",
@@ -153,15 +211,54 @@ class Exhibitor {
         "catalog_url",
         "catalogUrl",
       ]).nullIfEmpty,
-      website: _jsonString(json, const [
+      website: _jsonString(company, const [
         "website",
         "website_url",
         "websiteUrl",
-      ]).nullIfEmpty,
+      ]).ifEmpty(_jsonString(details, const ["website"])).nullIfEmpty,
+      address: _jsonString(details, const ["address"]).nullIfEmpty,
+      establishedYear: _jsonString(details, const ["established_year"])
+          .nullIfEmpty,
+      employeeCount: _jsonString(details, const ["number_of_employees"])
+          .nullIfEmpty,
+      targetMarket: _jsonString(details, const ["target_market"]).nullIfEmpty,
+      mainProducts: _jsonString(details, const ["main_products"]).nullIfEmpty,
     );
   }
 
+  Exhibitor withProfile(Exhibitor profile) => Exhibitor(
+    id: id,
+    slug: profile.slug ?? slug,
+    name: profile.name.isNotEmpty ? profile.name : name,
+    category: profile.category != "Exhibitor" ? profile.category : category,
+    booth: profile.booth != "TBA" ? profile.booth : booth,
+    hall: profile.hall != "To be announced" ? profile.hall : hall,
+    blurb:
+        profile.blurb != "Company information has not been published yet."
+        ? profile.blurb
+        : blurb,
+    tags: profile.tags.isNotEmpty ? profile.tags : tags,
+    products: profile.products.isNotEmpty ? profile.products : products,
+    productDetails: profile.productDetails.isNotEmpty
+        ? profile.productDetails
+        : productDetails,
+    news: profile.news.isNotEmpty ? profile.news : news,
+    logoUrl: profile.logoUrl ?? logoUrl,
+    coverUrl: profile.coverUrl ?? coverUrl,
+    videoUrl: profile.videoUrl ?? videoUrl,
+    videoUrls: profile.videoUrls.isNotEmpty ? profile.videoUrls : videoUrls,
+    brochureUrl: profile.brochureUrl ?? brochureUrl,
+    website: profile.website ?? website,
+    address: profile.address ?? address,
+    establishedYear: profile.establishedYear ?? establishedYear,
+    employeeCount: profile.employeeCount ?? employeeCount,
+    targetMarket: profile.targetMarket ?? targetMarket,
+    mainProducts: profile.mainProducts ?? mainProducts,
+    isDemo: isDemo,
+  );
+
   final String id;
+  final String? slug;
   final String name;
   final String category;
   final String booth;
@@ -169,12 +266,64 @@ class Exhibitor {
   final String blurb;
   final List<String> tags;
   final List<String> products;
+  final List<ExhibitorProduct> productDetails;
   final List<CompanyNews> news;
   final String? logoUrl;
+  final String? coverUrl;
   final String? videoUrl;
+  final List<String> videoUrls;
   final String? brochureUrl;
   final String? website;
+  final String? address;
+  final String? establishedYear;
+  final String? employeeCount;
+  final String? targetMarket;
+  final String? mainProducts;
   final bool isDemo;
+}
+
+class ExhibitorProduct {
+  const ExhibitorProduct({
+    required this.name,
+    this.description,
+    this.imageUrl,
+  });
+
+  final String name;
+  final String? description;
+  final String? imageUrl;
+}
+
+List<ExhibitorProduct> _exhibitorProducts(Object? value) {
+  if (value is! Iterable) return const [];
+  return value
+      .whereType<Map>()
+      .map((record) {
+        final product = Map<String, dynamic>.from(record);
+        final rawImage = product["image"];
+        final image = rawImage is Map
+            ? Map<String, dynamic>.from(rawImage)
+            : const <String, dynamic>{};
+        return ExhibitorProduct(
+          name: _jsonString(product, const ["name", "title"]),
+          description: _jsonString(product, const ["description"]).nullIfEmpty,
+          imageUrl: _jsonString(product, const [
+            "image_url",
+            "imageUrl",
+            "image",
+          ])
+              .ifEmpty(
+                _jsonString(image, const [
+                  "original_image_path",
+                  "path",
+                  "url",
+                ]),
+              )
+              .nullIfEmpty,
+        );
+      })
+      .where((product) => product.name.isNotEmpty)
+      .toList();
 }
 
 class CompanyNews {
@@ -218,6 +367,7 @@ List<String> _jsonStringList(Object? value) {
               "title",
               "label",
               "product",
+              "url",
             ]);
           }
           return "";

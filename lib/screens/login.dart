@@ -40,10 +40,16 @@ String? _userIdFromResponse(Map<String, dynamic> body) {
 }
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, this.onLoginSuccess, this.onSignOut});
+  const LoginScreen({
+    super.key,
+    this.onLoginSuccess,
+    this.onSignOut,
+    this.returnToCallerOnSuccess = false,
+  });
 
   final VoidCallback? onLoginSuccess;
   final ValueChanged<BuildContext>? onSignOut;
+  final bool returnToCallerOnSuccess;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -139,6 +145,11 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: Colors.green,
         ),
       );
+
+      if (widget.returnToCallerOnSuccess) {
+        Navigator.pop(context, true);
+        return;
+      }
 
       Navigator.pushReplacement(
         context,
@@ -466,8 +477,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
 
                     // Footer Link / Register hint
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
                         const Text(
                           "Don't have an account? ",

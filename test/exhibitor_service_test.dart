@@ -6,63 +6,123 @@ import "package:http/testing.dart";
 import "package:tiexpo/services/exhibitor_service.dart";
 
 void main() {
-  test("loads API exhibitor records from a nested response envelope", () async {
+  test("loads one featured-company page at a time", () async {
     final client = MockClient((request) async {
-      expect(request.url.path, "/api/v1/exhibitors");
-      return http.Response(
-        jsonEncode({
-          "data": {
-            "items": [
+      expect(request.url.host, "api.textiletoday.org");
+      expect(request.url.path, "/api/get-featured-companies");
+      final page = request.url.queryParameters["page"];
+      if (page == "1") {
+        return http.Response(
+          jsonEncode({
+            "status": "success",
+            "companies": [
               {
-                "id": "api-company-1",
-                "company_name": "API Textile Group",
-                "category": "Materials",
-                "booth_number": "A23",
-                "hall_name": "Hall A",
-                "description": "An API-provided company profile.",
-                "products": [
-                  {"name": "Recycled yarn"},
-                  {"title": "Smart fabric"},
-                ],
-                "news": [
-                  {
-                    "title": "New collection",
-                    "content": "API-backed company news.",
-                    "published_at": "2026-10-01",
-                  },
-                ],
-                "video_url": "https://example.com/company-video",
-                "brochure_url": "https://example.com/company-brochure.pdf",
-                "website": "https://example.com",
+                "id": 16,
+                "name": "Apna Organics",
+                "member_type": 30,
+                "company_details": {
+                  "company_id": 16,
+                  "slug": "apna-organics",
+                  "logo": "/storage/uploads/company/apna-organics/logo.jpg",
+                  "category": {"id": 8, "name": "Dyes & Chemicals"},
+                },
               },
             ],
+            "pagination": {
+              "current_page": 1,
+              "per_page": 1,
+              "total": 2,
+              "last_page": 2,
+              "has_more_pages": true,
+            },
+          }),
+          200,
+        );
+      }
+      expect(page, "2");
+      return http.Response(
+        jsonEncode({
+          "status": "success",
+          "companies": [
+            {
+              "id": 43,
+              "name": "InspirOn Engineering Pvt. Ltd.",
+              "member_type": 20,
+              "company_details": {
+                "company_id": 43,
+                "slug": "inspiron-engineering-pvt-ltd",
+                "logo":
+                    "/storage/uploads/company/inspiron-engineering/logo.jpg",
+                "category": {"id": 9, "name": "Machinery"},
+              },
+            },
+          ],
+          "pagination": {
+            "current_page": 2,
+            "per_page": 1,
+            "total": 2,
+            "last_page": 2,
+            "has_more_pages": false,
           },
         }),
         200,
       );
     });
 
-    final result = await ExhibitorService.load(client: client);
+    final firstPage = await ExhibitorService.load(client: client);
     client.close();
 
-    expect(result.isDemo, isFalse);
-    expect(result.exhibitors, hasLength(1));
-    expect(result.exhibitors.single.name, "API Textile Group");
-    expect(result.exhibitors.single.booth, "A23");
-    expect(result.exhibitors.single.products, [
-      "Recycled yarn",
-      "Smart fabric",
-    ]);
-    expect(result.exhibitors.single.news.single.title, "New collection");
+    expect(firstPage.isDemo, isFalse);
+    expect(firstPage.exhibitors, hasLength(1));
+    expect(firstPage.hasMorePages, isTrue);
+    expect(firstPage.exhibitors.single.name, "Apna Organics");
+    expect(firstPage.exhibitors.single.id, "16");
+    expect(firstPage.exhibitors.single.category, "Dyes & Chemicals");
     expect(
-      result.exhibitors.single.videoUrl,
-      "https://example.com/company-video",
+      firstPage.exhibitors.single.logoUrl,
+      "/storage/uploads/company/apna-organics/logo.jpg",
     );
-    expect(
-      result.exhibitors.single.brochureUrl,
-      "https://example.com/company-brochure.pdf",
+
+    final secondPageClient = MockClient((request) async {
+      expect(request.url.queryParameters["page"], "2");
+      return http.Response(
+        jsonEncode({
+          "status": "success",
+          "companies": [
+            {
+              "id": 43,
+              "name": "InspirOn Engineering Pvt. Ltd.",
+              "member_type": 20,
+              "company_details": {
+                "company_id": 43,
+                "slug": "inspiron-engineering-pvt-ltd",
+                "logo":
+                    "/storage/uploads/company/inspiron-engineering/logo.jpg",
+                "category": {"id": 9, "name": "Machinery"},
+              },
+            },
+          ],
+          "pagination": {
+            "current_page": 2,
+            "per_page": 1,
+            "total": 2,
+            "last_page": 2,
+            "has_more_pages": false,
+          },
+        }),
+        200,
+      );
+    });
+    final secondPage = await ExhibitorService.load(
+      page: 2,
+      client: secondPageClient,
     );
-    expect(result.exhibitors.single.website, "https://example.com");
+    secondPageClient.close();
+
+    expect(secondPage.isDemo, isFalse);
+    expect(secondPage.exhibitors.single.name, "InspirOn Engineering Pvt. Ltd.");
+    expect(secondPage.exhibitors.single.category, "Machinery");
+    expect(secondPage.hasMorePages, isFalse);
   });
 
   test("uses clearly marked demo data when the API is unavailable", () async {
@@ -76,4 +136,21 @@ void main() {
     expect(result.exhibitors, isNotEmpty);
     expect(result.exhibitors.every((exhibitor) => exhibitor.isDemo), isTrue);
   });
+
+  test(
+    "keeps later-page failures retryable without replacing loaded data",
+    () async {
+      final client = MockClient(
+        (_) async => http.Response("Server error", 500),
+      );
+
+      final result = await ExhibitorService.load(page: 2, client: client);
+      client.close();
+
+      expect(result.isDemo, isFalse);
+      expect(result.exhibitors, isEmpty);
+      expect(result.hasMorePages, isTrue);
+      expect(result.message, contains("500"));
+    },
+  );
 }
