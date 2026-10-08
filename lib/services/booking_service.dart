@@ -10,6 +10,7 @@ class BookingService {
     required String userId,
     required String companyId,
     required String timeSlot,
+    required String date,
     required String query,
     http.Client? client,
   }) async {
@@ -23,6 +24,7 @@ class BookingService {
               "user_id": userId,
               "company_id": companyId,
               "time_slot": timeSlot,
+              "date": date,     
               "query": query,
             }),
           )

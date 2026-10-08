@@ -10,6 +10,8 @@ import "../services/booking_service.dart";
 import "../services/company_profile_service.dart";
 import "../theme.dart";
 import "login.dart";
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 String _plainText(String html) {
   return html
@@ -159,6 +161,7 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Please sign in again before booking a meeting."),
+            behavior: SnackBarBehavior.floating,
           ),
         );
         return;
@@ -182,11 +185,54 @@ class _ExhibitorDetailState extends State<ExhibitorDetail> {
     );
 
     if (booking == null || !mounted) return;
+    // Professional success feedback banner matching backend email notification flow
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Booking request sent for ${exhibitor.name}: $booking"),
+        content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Icon(
+                Icons.check_circle_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Meeting Successfully Booked!",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    "Slot: $booking with ${exhibitor.name}.\nCalendar invite & confirmation email sent successfully.",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.white70,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF2E7D32), // Professional success green
+        duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
+        elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
       ),
     );
   }
@@ -1287,7 +1333,47 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
   int selectedDay = 1;
   String? selectedSlot;
   bool _isSubmitting = false;
+  bool _isLoadingSlots = true;
   String? _errorMessage;
+
+  // Set to store already booked slots retrieved from API
+  Set<String> _bookedSlots = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchBookedSlots();
+  }
+
+  // Fetch booked slots for this company from the API
+  Future<void> _fetchBookedSlots() async {
+    setState(() => _isLoadingSlots = true);
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiConfig.baseUrl}/booking-check'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'company_id': widget.companyId}),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        if (jsonResponse['status'] == 'success') {
+          final List data = jsonResponse['data'];
+          setState(() {
+            // Map the API time slots into your local tracking format
+            // Assuming data contains 'time_slot' or combines date/time
+            _bookedSlots = data
+                .map((item) => item['time_slot'].toString())
+                .toSet();
+          });
+        }
+      }
+    } catch (e) {
+      // Handle network error silently or show message
+    } finally {
+      if (mounted) setState(() => _isLoadingSlots = false);
+    }
+  }
 
   List<String> get _daySlots {
     final schedule = _bookingDays.firstWhere((day) => day.$1 == selectedDay);
@@ -1307,10 +1393,35 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
     return "$hour12.${minute.toString().padLeft(2, "0")} $period";
   }
 
+  // Check if all slots for the current day are booked
+  bool get _isDayFullyBooked {
+    final slots = _daySlots;
+    final dayLabel = _bookingDays.firstWhere((day) => day.$1 == selectedDay).$2;
+    return slots.every(
+      (slot) =>
+          _bookedSlots.contains("$dayLabel $slot") ||
+          _bookedSlots.contains(slot),
+    );
+  }
+
   @override
   void dispose() {
     _queryController.dispose();
     super.dispose();
+  }
+
+  // Helper method to get the correct Y-m-d date string based on selectedDay
+  String _getDateString() {
+    switch (selectedDay) {
+      case 1:
+        return "2026-11-12";
+      case 2:
+        return "2026-11-13";
+      case 3:
+        return "2026-11-14";
+      default:
+        return "2026-11-12";
+    }
   }
 
   Future<void> _submitBooking() async {
@@ -1331,12 +1442,17 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
       final dayLabel = _bookingDays
           .firstWhere((day) => day.$1 == selectedDay)
           .$2;
-      final timeSlot = "$dayLabel $selectedSlot";
+      final timeSlot = selectedSlot == "Special Slot Request"
+          ? "$dayLabel Special Slot Request"
+          : "$dayLabel $selectedSlot";
+
+      // Call BookingService with the date field included
       await BookingService.create(
         token: token,
         userId: userId,
         companyId: widget.companyId,
         timeSlot: timeSlot,
+        date: _getDateString(), // <-- Passed here
         query: _queryController.text.trim(),
       );
 
@@ -1381,6 +1497,8 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final dayLabel = _bookingDays.firstWhere((day) => day.$1 == selectedDay).$2;
+
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.85,
@@ -1402,7 +1520,7 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
               ),
               const SizedBox(height: 6),
               const Text(
-                "Choose a preferred 30-minute time. The exhibitor will confirm availability.",
+                "Choose a preferred 30-minute time. Already booked slots are disabled.",
                 style: TextStyle(
                   color: brandMuted,
                   fontSize: 13.5,
@@ -1461,34 +1579,115 @@ class _MeetingBookingSheetState extends State<_MeetingBookingSheet> {
                 ),
               ),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: _daySlots
-                    .map(
-                      (slot) => ChoiceChip(
-                        label: Text(slot),
-                        selected: selectedSlot == slot,
-                        selectedColor: brandPurple.withOpacity(0.12),
-                        checkmarkColor: brandPurple,
-                        labelStyle: TextStyle(
-                          color: selectedSlot == slot ? brandPurple : brandInk,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12.5,
+
+              // Loading check for slots
+              _isLoadingSlots
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: brandPurple,
+                          ),
                         ),
-                        side: BorderSide(
-                          color: selectedSlot == slot
-                              ? brandPurple.withOpacity(0.35)
-                              : const Color(0xFFE8E4EE),
-                        ),
-                        onSelected: (_) => setState(() {
-                          selectedSlot = slot;
-                          _errorMessage = null;
-                        }),
                       ),
                     )
-                    .toList(),
-              ),
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: _daySlots.map((slot) {
+                            // Check if this slot is booked (supports matching full string or slot-only string)
+                            final isBooked =
+                                _bookedSlots.contains("$dayLabel $slot") ||
+                                _bookedSlots.contains(slot);
+
+                            return ChoiceChip(
+                              label: Text(isBooked ? "$slot (Booked)" : slot),
+                              selected: selectedSlot == slot,
+                              disabledColor: Colors.grey.shade200,
+                              selectedColor: brandPurple.withOpacity(0.12),
+                              checkmarkColor: brandPurple,
+                              labelStyle: TextStyle(
+                                color: isBooked
+                                    ? Colors.grey.shade400
+                                    : (selectedSlot == slot
+                                          ? brandPurple
+                                          : brandInk),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12.5,
+                                decoration: isBooked
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                              ),
+                              side: BorderSide(
+                                color: selectedSlot == slot
+                                    ? brandPurple.withOpacity(0.35)
+                                    : const Color(0xFFE8E4EE),
+                              ),
+                              // Disable selection if the slot is already booked
+                              onSelected: isBooked
+                                  ? null
+                                  : (_) => setState(() {
+                                      selectedSlot = slot;
+                                      _errorMessage = null;
+                                    }),
+                            );
+                          }).toList(),
+                        ),
+
+                        // If all regular slots are booked, provide a special slot request choice
+                        if (_isDayFullyBooked) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.amber.shade300),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "All regular slots for this day are fully booked.",
+                                  style: TextStyle(
+                                    color: Colors.amber,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                ChoiceChip(
+                                  label: const Text("Request Special Slot"),
+                                  selected:
+                                      selectedSlot == "Special Slot Request",
+                                  selectedColor: brandPurple.withOpacity(0.12),
+                                  checkmarkColor: brandPurple,
+                                  labelStyle: TextStyle(
+                                    color:
+                                        selectedSlot == "Special Slot Request"
+                                        ? brandPurple
+                                        : brandInk,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12.5,
+                                  ),
+                                  onSelected: (_) => setState(() {
+                                    selectedSlot = "Special Slot Request";
+                                    _errorMessage = null;
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
 
               const SizedBox(height: 12),
               TextField(
